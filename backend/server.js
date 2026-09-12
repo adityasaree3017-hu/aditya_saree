@@ -7,7 +7,7 @@ const multer = require("multer");
 const app = express();
 const PORT = process.env.PORT || 3000;
 const frontendDir = path.join(__dirname, "../frontend");
-const uploadDir = path.join(frontendDir, "uploads");
+const uploadDir = process.env.VERCEL ? "/tmp/uploads" : path.join(frontendDir, "uploads");
 
 fs.mkdirSync(uploadDir, { recursive: true });
 
