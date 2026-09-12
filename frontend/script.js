@@ -125,6 +125,22 @@ async function readJsonResponse(response) {
   }
 }
 
+function trackMetaEvent(eventName, parameters = {}) {
+  if (typeof window.fbq === "function") {
+    window.fbq("track", eventName, parameters);
+  }
+}
+
+function getMetaProductParameters(product) {
+  return {
+    content_ids: [product.code],
+    content_name: product.name,
+    content_type: "product",
+    value: Number(product.price) || 0,
+    currency: "BDT",
+  };
+}
+
 function setAdminAuthState(isAuthenticated) {
   if (adminLoginScreen) {
     adminLoginScreen.classList.toggle("d-none", isAuthenticated);
@@ -393,6 +409,8 @@ function openProductModal(product) {
         cart.push({ ...selected, quantity: 1 });
       }
 
+      trackMetaEvent("AddToCart", getMetaProductParameters(selected));
+
       updateOrderPreview();
       updateTotalPrice();
       closeProductModal();
@@ -488,6 +506,8 @@ function renderProducts() {
         } else {
           cart.push({ ...selected, quantity: 1 });
         }
+
+        trackMetaEvent("AddToCart", getMetaProductParameters(selected));
 
         updateOrderPreview();
         updateTotalPrice();
@@ -749,6 +769,15 @@ async function handleOrderSubmit(event) {
     return;
   }
 
+  trackMetaEvent("InitiateCheckout", {
+    content_ids: cart.map((item) => item.code),
+    contents: cart.map((item) => ({ id: item.code, quantity: item.quantity })),
+    content_type: "product",
+    num_items: cart.reduce((sum, item) => sum + item.quantity, 0),
+    value: cart.reduce((sum, item) => sum + item.price * item.quantity, 0) + getSelectedDeliveryFee(),
+    currency: "BDT",
+  });
+
   const formData = new FormData(orderForm);
   const payload = {
     name: formData.get("name"),
@@ -785,6 +814,18 @@ async function handleOrderSubmit(event) {
 
     formMessage.textContent = result.message;
     formMessage.className = "mt-3 text-center text-success fw-semibold";
+    const purchaseValue = payload.totalAmount;
+    const purchaseParameters = {
+      content_ids: cart.map((item) => item.code),
+      contents: cart.map((item) => ({ id: item.code, quantity: item.quantity })),
+      content_type: "product",
+      num_items: payload.quantity,
+      value: purchaseValue,
+      currency: "BDT",
+      order_id: result.order?.id,
+    };
+    trackMetaEvent("Lead", purchaseParameters);
+    trackMetaEvent("Purchase", purchaseParameters);
     orderForm.reset();
     cart.length = 0;
     updateOrderPreview();
