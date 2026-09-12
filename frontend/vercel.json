@@ -11,7 +11,7 @@
     },
     {
       "source": "/api/:path*",
-      "destination": "https://backend-offchuppy-7653.vercel.app/api/:path*"
+      "destination": "https://backend-g9d2awg6v-offchuppy-7653.vercel.app/api/:path*"
     }
   ]
 }

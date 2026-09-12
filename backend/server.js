@@ -1,28 +1,21 @@
 const express = require("express");
 const cors = require("cors");
-const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const frontendDir = path.join(__dirname, "../frontend");
-const uploadDir = process.env.VERCEL ? "/tmp/uploads" : path.join(frontendDir, "uploads");
 
-fs.mkdirSync(uploadDir, { recursive: true });
+const upload = multer({ storage: multer.memoryStorage() });
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const timestamp = Date.now();
-    const safeName = file.originalname.replace(/\s+/g, "-");
-    cb(null, `${timestamp}-${safeName}`);
-  },
-});
+function getUploadedImage(file, fallbackImage) {
+  if (!file) {
+    return fallbackImage;
+  }
 
-const upload = multer({ storage });
+  return `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
+}
 
 const orders = [];
 const products = [
@@ -166,7 +159,7 @@ app.post("/api/products", upload.single("imageFile"), (req, res) => {
     });
   }
 
-  const uploadedImage = req.file ? `/uploads/${req.file.filename}` : image || "hero_img.webp";
+  const uploadedImage = getUploadedImage(req.file, image || "hero_img.webp");
 
   const newProduct = {
     id: `prod-${Date.now()}`,
@@ -194,7 +187,7 @@ app.patch("/api/products/:id", upload.single("imageFile"), (req, res) => {
     return res.status(404).json({ message: "Product not found." });
   }
 
-  const uploadedImage = req.file ? `/uploads/${req.file.filename}` : image || products[productIndex].image;
+  const uploadedImage = getUploadedImage(req.file, image || products[productIndex].image);
 
   products[productIndex] = {
     ...products[productIndex],
