@@ -506,7 +506,12 @@ function renderAdminProducts() {
           <td>${product.name}</td>
           <td>${product.code}</td>
           <td>৳${product.price.toLocaleString()}</td>
-          <td>${product.image}</td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <img src="${product.image}" alt="${product.name}" width="48" height="48" style="object-fit: cover; border-radius: 8px;" />
+              <span>${product.image.startsWith("data:") ? "Uploaded image" : product.image}</span>
+            </div>
+          </td>
           <td>${product.description || "-"}</td>
           <td>
             <div class="d-flex gap-2">
