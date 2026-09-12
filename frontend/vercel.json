@@ -11,7 +11,7 @@
     },
     {
       "source": "/api/:path*",
-      "destination": "https://YOUR_RENDER_SERVICE.onrender.com/api/:path*"
+      "destination": "https://backend-3mzzsxph3-offchuppy-7653.vercel.app/api/:path*"
     }
   ]
 }

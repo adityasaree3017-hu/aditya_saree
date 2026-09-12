@@ -262,6 +262,10 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(frontendDir, "index.html"));
 });
 
-app.listen(PORT, () => {
-  console.log(`Adiyta Saree server running on http://localhost:${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Adiyta Saree server running on http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
