@@ -872,7 +872,7 @@ function initAdminOrderPage() {
 
   async function loadAdminOrders() {
     try {
-      const response = await fetch("/api/orders");
+      const response = await fetch("/api/orders", { cache: "no-store" });
 
       if (!response.ok) {
         throw new Error("Unable to load orders.");
@@ -958,6 +958,7 @@ function initAdminOrderPage() {
   }
 
   loadAdminOrders();
+  window.setInterval(loadAdminOrders, 10000);
 }
 
 if (adminLoginForm) {

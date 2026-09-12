@@ -77,6 +77,7 @@ app.get("/api/health", (req, res) => {
 });
 
 app.get("/api/orders", (req, res) => {
+  res.set("Cache-Control", "no-store");
   res.json(orders);
 });
 
