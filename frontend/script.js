@@ -80,6 +80,10 @@ const resetProductFormButton = document.getElementById("resetProductForm");
 const cart = [];
 let orderButtonResetTimer = null;
 
+function getProductImages(product) {
+  return Array.isArray(product.images) && product.images.length ? product.images : [product.image];
+}
+
 async function readJsonResponse(response) {
   const text = await response.text();
 
@@ -305,10 +309,22 @@ function openProductModal(product) {
     return;
   }
 
+  const productImages = getProductImages(product);
+  let activeImageIndex = 0;
+
   productModalContent.innerHTML = `
     <div class="product-modal-body">
       <div class="product-modal-image-wrap">
-        <img src="${product.image}" class="product-modal-image" alt="${product.name}" />
+        <div class="product-modal-gallery">
+          <button class="product-modal-gallery-button product-modal-gallery-prev" type="button" aria-label="Previous image" ${productImages.length < 2 ? "disabled" : ""}>
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          <img src="${productImages[0]}" class="product-modal-image" alt="${product.name} - image 1" />
+          <button class="product-modal-gallery-button product-modal-gallery-next" type="button" aria-label="Next image" ${productImages.length < 2 ? "disabled" : ""}>
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+        ${productImages.length > 1 ? `<div class="product-modal-dots" role="tablist" aria-label="Product images">${productImages.map((_, index) => `<button type="button" class="product-modal-dot${index === 0 ? " is-active" : ""}" data-image-index="${index}" aria-label="Show image ${index + 1}"></button>`).join("")}</div>` : ""}
       </div>
       <div class="product-modal-text">
         <p class="product-modal-label">কোড: ${product.code}</p>
@@ -318,12 +334,25 @@ function openProductModal(product) {
         <button class="btn btn-order-card fizzy-btn" type="button" data-modal-product-code="${product.code}">
           <span class="btn-text">
             <i class="fa-solid fa-cart-plus"></i>
-            কার্টে যোগ করুন
+            Order now
           </span>
         </button>
       </div>
     </div>
   `;
+
+  const modalImage = productModalContent.querySelector(".product-modal-image");
+  const galleryDots = Array.from(productModalContent.querySelectorAll(".product-modal-dot"));
+  const updateModalImage = (nextIndex) => {
+    activeImageIndex = (nextIndex + productImages.length) % productImages.length;
+    modalImage.src = productImages[activeImageIndex];
+    modalImage.alt = `${product.name} - image ${activeImageIndex + 1}`;
+    galleryDots.forEach((dot, index) => dot.classList.toggle("is-active", index === activeImageIndex));
+  };
+
+  productModalContent.querySelector(".product-modal-gallery-prev")?.addEventListener("click", () => updateModalImage(activeImageIndex - 1));
+  productModalContent.querySelector(".product-modal-gallery-next")?.addEventListener("click", () => updateModalImage(activeImageIndex + 1));
+  galleryDots.forEach((dot) => dot.addEventListener("click", () => updateModalImage(Number(dot.dataset.imageIndex))));
 
   const modalCartButton = productModalContent.querySelector("[data-modal-product-code]");
   modalCartButton?.addEventListener("click", () => {
@@ -382,7 +411,7 @@ function renderProducts() {
               <button class="btn btn-order-card fizzy-btn" type="button" data-product-code="${product.code}">
                 <span class="btn-text">
                   <i class="fa-solid fa-cart-plus"></i>
-                  কার্টে যোগ করুন
+                  Order now
                 </span>
               </button>
             </div>
@@ -494,8 +523,8 @@ function setProductFormMode(product) {
   productForm.elements.price.value = product.price;
   productForm.elements.description.value = product.description || "";
 
-  if (productForm.elements.imageFile) {
-    productForm.elements.imageFile.value = "";
+  if (productForm.elements.imageFiles) {
+    productForm.elements.imageFiles.value = "";
   }
 
   if (productFormSubmitButton) {
@@ -521,7 +550,7 @@ function renderAdminProducts() {
           <td>
             <div class="d-flex align-items-center gap-2">
               <img src="${product.image}" alt="${product.name}" width="48" height="48" style="object-fit: cover; border-radius: 8px;" />
-              <span>${product.image.startsWith("data:") ? "Uploaded image" : product.image}</span>
+              <span>${getProductImages(product).length} image${getProductImages(product).length === 1 ? "" : "s"}</span>
             </div>
           </td>
           <td>${product.description || "-"}</td>
@@ -562,7 +591,7 @@ async function handleProductFormSubmit(event) {
     description: formData.get("description")?.trim() || "",
   };
 
-  const imageFile = formData.get("imageFile");
+  const imageFiles = formData.getAll("imageFiles");
 
   if (!payload.name || !payload.code || !payload.price) {
     window.alert("Please fill in product name, code, and price.");
@@ -580,9 +609,11 @@ async function handleProductFormSubmit(event) {
     requestBody.append("price", String(payload.price));
     requestBody.append("description", payload.description);
 
-    if (imageFile && imageFile.size > 0) {
-      requestBody.append("imageFile", imageFile);
-    }
+    imageFiles.forEach((imageFile) => {
+      if (imageFile && imageFile.size > 0) {
+        requestBody.append("imageFiles", imageFile);
+      }
+    });
 
     const response = await fetch(requestUrl, {
       method,

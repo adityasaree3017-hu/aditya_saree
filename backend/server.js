@@ -9,12 +9,12 @@ const frontendDir = path.join(__dirname, "../frontend");
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-function getUploadedImage(file, fallbackImage) {
-  if (!file) {
-    return fallbackImage;
+function getUploadedImages(files, fallbackImages) {
+  if (!files?.length) {
+    return fallbackImages;
   }
 
-  return `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
+  return files.map((file) => `data:${file.mimetype};base64,${file.buffer.toString("base64")}`);
 }
 
 const orders = [];
@@ -175,7 +175,7 @@ app.get("/api/products", (req, res) => {
   res.json(products);
 });
 
-app.post("/api/products", upload.single("imageFile"), (req, res) => {
+app.post("/api/products", upload.array("imageFiles", 10), (req, res) => {
   const { name, code, price, image, description } = req.body;
 
   if (!name || !code || !price) {
@@ -184,14 +184,15 @@ app.post("/api/products", upload.single("imageFile"), (req, res) => {
     });
   }
 
-  const uploadedImage = getUploadedImage(req.file, image || "hero_img.webp");
+  const images = getUploadedImages(req.files, image ? [image] : ["hero_img.webp"]);
 
   const newProduct = {
     id: `prod-${Date.now()}`,
     name,
     code,
     price: Number(price) || 0,
-    image: uploadedImage,
+    image: images[0],
+    images,
     description: description || "",
   };
 
@@ -203,7 +204,7 @@ app.post("/api/products", upload.single("imageFile"), (req, res) => {
   });
 });
 
-app.patch("/api/products/:id", upload.single("imageFile"), (req, res) => {
+app.patch("/api/products/:id", upload.array("imageFiles", 10), (req, res) => {
   const { id } = req.params;
   const { name, code, price, image, description } = req.body;
   const productIndex = products.findIndex((product) => product.id === id);
@@ -212,14 +213,16 @@ app.patch("/api/products/:id", upload.single("imageFile"), (req, res) => {
     return res.status(404).json({ message: "Product not found." });
   }
 
-  const uploadedImage = getUploadedImage(req.file, image || products[productIndex].image);
+  const existingImages = products[productIndex].images || [products[productIndex].image];
+  const images = getUploadedImages(req.files, image ? [image] : existingImages);
 
   products[productIndex] = {
     ...products[productIndex],
     name: name || products[productIndex].name,
     code: code || products[productIndex].code,
     price: Number(price) || products[productIndex].price,
-    image: uploadedImage,
+    image: images[0],
+    images,
     description: description ?? products[productIndex].description,
   };
 
