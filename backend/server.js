@@ -117,7 +117,7 @@ app.delete("/api/orders/:id", (req, res) => {
 });
 
 app.post("/api/orders", (req, res) => {
-  const { name, phone, saree, quantity, items, address, deliveryType, deliveryFee } = req.body;
+  const { name, phone, saree, quantity, items, subtotal: submittedSubtotal, address, deliveryType, deliveryFee } = req.body;
 
   if (!name || !phone || !saree || !address) {
     return res.status(400).json({
@@ -125,7 +125,10 @@ app.post("/api/orders", (req, res) => {
     });
   }
 
-  const normalizedItems = Array.isArray(items) && items.length
+  const hasLineItems = Array.isArray(items) && items.length;
+  const fallbackQuantity = Number(quantity) || 1;
+  const fallbackSubtotal = Number(submittedSubtotal) || 0;
+  const normalizedItems = hasLineItems
     ? items.map((item) => ({
         name: item.name,
         code: item.code,
@@ -135,10 +138,12 @@ app.post("/api/orders", (req, res) => {
     : [{
         name: saree,
         code: "",
-        quantity: Number(quantity) || 1,
-        price: 0,
+        quantity: fallbackQuantity,
+        price: fallbackSubtotal / fallbackQuantity,
       }];
-  const subtotal = normalizedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const subtotal = hasLineItems
+    ? normalizedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+    : fallbackSubtotal;
   const normalizedDeliveryFee = Number(deliveryFee) || 0;
 
   const newOrder = {

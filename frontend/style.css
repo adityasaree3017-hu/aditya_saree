@@ -598,6 +598,42 @@ img {
   color: var(--text-light);
 }
 
+.order-cell-primary,
+.order-cell-address {
+  min-width: 110px;
+}
+
+.order-line-items {
+  min-width: 220px;
+}
+
+.order-line-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid rgba(18, 13, 23, 0.08);
+}
+
+.order-line-item:last-child {
+  border-bottom: 0;
+}
+
+.order-line-item small,
+.order-total-cell small {
+  color: #6c757d;
+}
+
+.order-total-cell {
+  min-width: 150px;
+  white-space: nowrap;
+}
+
+.order-total-cell strong,
+.order-total-cell small {
+  display: block;
+}
+
 .site-footer .developer-link {
   color: #fff;
   text-decoration: none;
