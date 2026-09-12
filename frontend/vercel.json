@@ -8,6 +8,10 @@
     {
       "source": "/admin/",
       "destination": "/admin.html"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "https://YOUR_RENDER_SERVICE.onrender.com/api/:path*"
     }
   ]
 }
