@@ -247,6 +247,18 @@ function updateOrderPreview() {
     )
     .join("");
 
+  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const deliveryFee = getSelectedDeliveryFee();
+  const total = subtotal + deliveryFee;
+  orderPreview.insertAdjacentHTML(
+    "beforeend",
+    `<div class="order-total-summary">
+      <div><span>পণ্যের মূল্য</span><strong>৳${subtotal.toLocaleString()}</strong></div>
+      <div><span>ডেলিভারি চার্জ</span><strong>৳${deliveryFee.toLocaleString()}</strong></div>
+      <div class="order-grand-total"><span>সর্বমোট</span><strong>৳${total.toLocaleString()} BDT</strong></div>
+    </div>`
+  );
+
   const removeButtons = document.querySelectorAll("[data-remove-code]");
   removeButtons.forEach((button) => {
     button.addEventListener("click", () => {
@@ -684,6 +696,13 @@ async function handleOrderSubmit(event) {
     phone: formData.get("phone"),
     saree: cart.map((item) => `${item.name} (${item.code}) x${item.quantity}`).join(", "),
     quantity: cart.reduce((sum, item) => sum + item.quantity, 0),
+    items: cart.map((item) => ({
+      name: item.name,
+      code: item.code,
+      quantity: item.quantity,
+      price: item.price,
+    })),
+    subtotal: cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
     address: formData.get("address"),
     deliveryType: getSelectedDeliveryType(),
     deliveryFee: getSelectedDeliveryFee(),
@@ -888,9 +907,17 @@ function initAdminOrderPage() {
               <td>${order.id}</td>
               <td>${order.name}</td>
               <td>${order.phone}</td>
-              <td>${order.saree}</td>
-              <td>${order.quantity}</td>
               <td>${order.address}</td>
+              <td>
+                ${(order.items || []).length
+                  ? order.items.map((item) => `${item.name} x${item.quantity} @ ৳${Number(item.price || 0).toLocaleString()}`).join("<br />")
+                  : order.saree || "-"}
+              </td>
+              <td>${order.quantity}</td>
+              <td>
+                <strong>৳${Number(order.totalAmount || 0).toLocaleString()} BDT</strong>
+                <small class="d-block text-muted">৳${Number(order.subtotal || 0).toLocaleString()} + ৳${Number(order.deliveryFee || 0).toLocaleString()} delivery</small>
+              </td>
               <td>
                 <select class="form-select form-select-sm order-status-select" data-order-id="${order.id}">
                   <option value="new" ${order.status === "new" ? "selected" : ""}>new</option>

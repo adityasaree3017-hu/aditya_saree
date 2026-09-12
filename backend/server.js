@@ -117,7 +117,7 @@ app.delete("/api/orders/:id", (req, res) => {
 });
 
 app.post("/api/orders", (req, res) => {
-  const { name, phone, saree, quantity, address, deliveryType, deliveryFee } = req.body;
+  const { name, phone, saree, quantity, items, address, deliveryType, deliveryFee } = req.body;
 
   if (!name || !phone || !saree || !address) {
     return res.status(400).json({
@@ -125,15 +125,34 @@ app.post("/api/orders", (req, res) => {
     });
   }
 
+  const normalizedItems = Array.isArray(items) && items.length
+    ? items.map((item) => ({
+        name: item.name,
+        code: item.code,
+        quantity: Number(item.quantity) || 1,
+        price: Number(item.price) || 0,
+      }))
+    : [{
+        name: saree,
+        code: "",
+        quantity: Number(quantity) || 1,
+        price: 0,
+      }];
+  const subtotal = normalizedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const normalizedDeliveryFee = Number(deliveryFee) || 0;
+
   const newOrder = {
     id: String(Date.now()),
     name,
     phone,
     saree,
-    quantity: Number(quantity) || 1,
+    items: normalizedItems,
+    quantity: normalizedItems.reduce((sum, item) => sum + item.quantity, 0),
     address,
     deliveryType: deliveryType || "insideDhaka",
-    deliveryFee: Number(deliveryFee) || 0,
+    deliveryFee: normalizedDeliveryFee,
+    subtotal,
+    totalAmount: subtotal + normalizedDeliveryFee,
     status: "new",
     createdAt: new Date().toISOString(),
   };
