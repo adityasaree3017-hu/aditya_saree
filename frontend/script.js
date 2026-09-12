@@ -77,8 +77,34 @@ const productForm = document.getElementById("productForm");
 const productIdField = document.getElementById("productId");
 const productFormSubmitButton = document.getElementById("productFormSubmit");
 const resetProductFormButton = document.getElementById("resetProductForm");
+const imageFilesInput = document.getElementById("imageFiles");
+const selectedImagesStatus = document.getElementById("selectedImagesStatus");
+const selectedImagesPreview = document.getElementById("selectedImagesPreview");
 const cart = [];
 let orderButtonResetTimer = null;
+
+function updateSelectedImagesPreview() {
+  if (!imageFilesInput || !selectedImagesStatus || !selectedImagesPreview) {
+    return;
+  }
+
+  const files = Array.from(imageFilesInput.files || []);
+  selectedImagesPreview.innerHTML = "";
+
+  if (!files.length) {
+    selectedImagesStatus.textContent = "No photos selected";
+    return;
+  }
+
+  selectedImagesStatus.textContent = `${files.length} photo${files.length === 1 ? "" : "s"} selected`;
+  files.slice(0, 6).forEach((file) => {
+    const image = document.createElement("img");
+    image.src = URL.createObjectURL(file);
+    image.alt = file.name;
+    image.onload = () => URL.revokeObjectURL(image.src);
+    selectedImagesPreview.appendChild(image);
+  });
+}
 
 function getProductImages(product) {
   return Array.isArray(product.images) && product.images.length ? product.images : [product.image];
@@ -526,6 +552,8 @@ function setProductFormMode(product) {
   if (productForm.elements.imageFiles) {
     productForm.elements.imageFiles.value = "";
   }
+
+  updateSelectedImagesPreview();
 
   if (productFormSubmitButton) {
     productFormSubmitButton.textContent = "Update Product";
@@ -1008,6 +1036,10 @@ if (deliveryTypeInputs.length) {
   deliveryTypeInputs.forEach((input) => {
     input.addEventListener("change", updateTotalPrice);
   });
+}
+
+if (imageFilesInput) {
+  imageFilesInput.addEventListener("change", updateSelectedImagesPreview);
 }
 
 if (productModalClose) {

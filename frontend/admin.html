@@ -196,16 +196,22 @@
             <label class="form-label">Price</label>
             <input type="number" class="form-control" name="price" min="0" required />
           </div>
-          <div class="col-md-2">
-            <label class="form-label">Product images</label>
-            <input type="file" class="form-control" name="imageFiles" accept="image/*" multiple />
-            <small class="text-muted">Select multiple images</small>
+          <div class="col-md-2 col-12">
+            <label class="form-label" for="imageFiles">Product photos</label>
+            <label class="mobile-upload-picker" for="imageFiles">
+              <i class="fa-solid fa-images"></i>
+              <span>Choose photos</span>
+              <small>Choose more than one</small>
+            </label>
+            <input class="visually-hidden" type="file" name="imageFiles" id="imageFiles" accept="image/*" multiple />
+            <div class="selected-images-status" id="selectedImagesStatus" aria-live="polite">No photos selected</div>
+            <div class="selected-images-preview" id="selectedImagesPreview"></div>
           </div>
           <div class="col-md-3">
             <label class="form-label">Description</label>
             <input type="text" class="form-control" name="description" />
           </div>
-          <div class="col-12 d-flex justify-content-end gap-2">
+          <div class="col-12 d-flex justify-content-end gap-2 product-form-actions">
             <button type="reset" class="btn btn-outline-secondary" id="resetProductForm">Clear</button>
             <button type="submit" class="btn btn-primary" id="productFormSubmit">Add Product</button>
           </div>
